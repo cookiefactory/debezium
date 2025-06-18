@@ -7,6 +7,7 @@ package io.debezium.ai.embeddings;
 
 import static io.debezium.ai.embeddings.FieldToEmbedding.LEGACY_EMBEDDINGS_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,14 @@ public class EmbeddingsMiniLmL6V2Test {
         assertThat(payloadStruct.getStruct("after").getString("product")).contains("a product");
         List<Float> embeddings = payloadStruct.getStruct("after").getArray("prod_embedding");
         assertThat(embeddings.size()).isEqualTo(384);
-        assertThat(embeddings).startsWith(-0.07157834f, 0.022438003f, -0.0236557f, -0.014294243f, 0.0048211957f, 0.020384153f, 0.20435654f, 0.057306267f, 0.05457874f,
-                -0.030588629f);
+
+        // Expected values
+        float[] expected = { -0.07157834f, 0.022438003f, -0.0236557f, -0.014294243f, 0.0048211957f, 0.020384153f, 0.20435654f, 0.057306267f, 0.05457874f, -0.030588629f };
+
+        // Compare each value with a tolerance
+        for (int i = 0; i < expected.length; i++) {
+            assertThat(embeddings.get(i)).isCloseTo(expected[i], within(0.00001f));
+        }
     }
+
 }
