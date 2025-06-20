@@ -106,7 +106,8 @@ public class SqlServerConnection extends JdbcConnection {
     private static final String GET_CHANGE_TABLES = "WITH ordered_change_tables" +
             " AS (SELECT ROW_NUMBER() OVER (PARTITION BY ct.source_object_id, ct.start_lsn ORDER BY ct.create_date DESC) AS ct_sequence," +
             " ct.*" +
-            " FROM #db.cdc.change_tables AS ct#)" +
+            " FROM [#db].cdc.change_tables AS ct#" +
+            " WHERE ct.role_name is NULL)" + 
             " SELECT OBJECT_SCHEMA_NAME(source_object_id, DB_ID(?))," +
             " OBJECT_NAME(source_object_id, DB_ID(?))," +
             " capture_instance," +
