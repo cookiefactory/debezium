@@ -91,7 +91,6 @@ public class SqlServerConnection extends JdbcConnection {
      */
     private static final String GET_CAPTURED_COLUMNS = "SELECT object_id, column_name" +
             " FROM #db.cdc.captured_columns" +
-            " WHERE object_id != 359526768" +
             " ORDER BY object_id, column_id";
 
     /**
@@ -108,7 +107,7 @@ public class SqlServerConnection extends JdbcConnection {
             " AS (SELECT ROW_NUMBER() OVER (PARTITION BY ct.source_object_id, ct.start_lsn ORDER BY ct.create_date DESC) AS ct_sequence," +
             " ct.*" +
             " FROM [#db].cdc.change_tables AS ct#" +
-            " WHERE ct.role_name is NULL)" +
+            " WHERE ct.role_name is NULL)" + 
             " SELECT OBJECT_SCHEMA_NAME(source_object_id, DB_ID(?))," +
             " OBJECT_NAME(source_object_id, DB_ID(?))," +
             " capture_instance," +
@@ -116,7 +115,7 @@ public class SqlServerConnection extends JdbcConnection {
             " start_lsn" +
             " FROM ordered_change_tables WHERE ct_sequence = 1";
 
-    private static final String GET_NEW_CHANGE_TABLES = "SELECT * FROM #db.cdc.change_tables WHERE start_lsn BETWEEN ? AND ? AND role_name is NULL";
+    private static final String GET_NEW_CHANGE_TABLES = "SELECT * FROM #db.cdc.change_tables WHERE start_lsn BETWEEN ? AND ?";
     private static final String GET_MIN_LSN_FROM_ALL_CHANGE_TABLES = "select min(start_lsn) from #db.cdc.change_tables";
     private static final String OPENING_QUOTING_CHARACTER = "[";
     private static final String CLOSING_QUOTING_CHARACTER = "]";
