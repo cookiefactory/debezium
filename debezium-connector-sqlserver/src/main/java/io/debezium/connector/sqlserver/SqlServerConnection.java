@@ -91,6 +91,7 @@ public class SqlServerConnection extends JdbcConnection {
      */
     private static final String GET_CAPTURED_COLUMNS = "SELECT object_id, column_name" +
             " FROM #db.cdc.captured_columns" +
+            " WHERE object_id != 359526768" +
             " ORDER BY object_id, column_id";
 
     /**
@@ -103,11 +104,13 @@ public class SqlServerConnection extends JdbcConnection {
      *   1. The stored procedure doesn't allow filtering capture instances by start LSN.
      *   2. There is no way to use the result returned by a stored procedure in a query.
      */
-    private static final String GET_CHANGE_TABLES = "WITH ordered_change_tables" +
+    private static final String GET_CHANGE_TABLES = "WITH instance_filtered" +
+            " AS (SELECT * FROM #db.cdc.change_tables" +
+            " WHERE capture_instance != 'vsp_tracking')," +
+            " ordered_change_tables" +
             " AS (SELECT ROW_NUMBER() OVER (PARTITION BY ct.source_object_id, ct.start_lsn ORDER BY ct.create_date DESC) AS ct_sequence," +
             " ct.*" +
-            " FROM [#db].cdc.change_tables AS ct#" +
-            " WHERE ct.role_name is NULL)" + 
+            " FROM instance_filtered AS ct#)" +
             " SELECT OBJECT_SCHEMA_NAME(source_object_id, DB_ID(?))," +
             " OBJECT_NAME(source_object_id, DB_ID(?))," +
             " capture_instance," +
@@ -115,7 +118,7 @@ public class SqlServerConnection extends JdbcConnection {
             " start_lsn" +
             " FROM ordered_change_tables WHERE ct_sequence = 1";
 
-    private static final String GET_NEW_CHANGE_TABLES = "SELECT * FROM #db.cdc.change_tables WHERE start_lsn BETWEEN ? AND ?";
+    private static final String GET_NEW_CHANGE_TABLES = "SELECT * FROM #db.cdc.change_tables WHERE start_lsn BETWEEN ? AND ? AND capture_instance != 'vsp_tracking'";
     private static final String GET_MIN_LSN_FROM_ALL_CHANGE_TABLES = "select min(start_lsn) from #db.cdc.change_tables";
     private static final String OPENING_QUOTING_CHARACTER = "[";
     private static final String CLOSING_QUOTING_CHARACTER = "]";
